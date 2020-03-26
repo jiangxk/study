@@ -101,5 +101,6 @@ ldapRealm.contextFactory.authenticationMechanism = DIGEST-MD5
 # shiro 程序实现
 1. JWTUtil 实现获取token 、校验token
 2. 实现Realm 进行认证和授权
-3. 实现AuthenticationToken,返回token值
-4，重新BasicHttpAuthenticationFilter ，实现自己的filter
+3. 实现AuthenticationToken 返回token值
+4. 重新BasicHttpAuthenticationFilter ，实现自己的filter
+5. 参考(https://pushy.site/2018/11/21/spring-shiro/)
