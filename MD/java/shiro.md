@@ -97,3 +97,8 @@ ldapRealm.contextFactory.url = ldap://ldapHost:389
 ldapRealm.contextFactory.authenticationMechanism = DIGEST-MD5 
 既然已经了解如何建立一个基本的Shiro环境，下面让我们来讨论，作为一名开发者该如何使用这个框架。
 ```
+
+# shiro 程序实现
+1. JWTUtil 实现获取token 、校验token
+2. 实现Realm 进行认证和授权
+3. 实现AuthenticationToken
