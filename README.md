@@ -1,5 +1,5 @@
 # study
 ## java 
- * [shiro](./MD/java/shiro.md)
+ * [Shiro](./MD/java/shiro.md)
  * Docker
    
