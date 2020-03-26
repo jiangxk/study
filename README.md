@@ -1,4 +1,4 @@
 # study
 ## java 
- * [shiro](./MD/java/shiro)
+ * [shiro](./MD/java/shiro.md)
    
