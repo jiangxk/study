@@ -103,4 +103,4 @@ ldapRealm.contextFactory.authenticationMechanism = DIGEST-MD5
 2. 实现Realm 进行认证和授权
 3. 实现AuthenticationToken 返回token值
 4. 重新BasicHttpAuthenticationFilter ，实现自己的filter
-5. 参考(https://juejin.im/post/59f1b2766fb9a0450e755993)
+5. 参考(https://juejin.im/post/59f1b2766fb9a0450e755993)(https://github.com/Smith-Cruise/Spring-Boot-Security-JWT-SPA)
