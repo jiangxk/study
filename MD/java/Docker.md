@@ -4,9 +4,10 @@ https://juejin.im/post/5d4522c1f265da03e05af5f5
 # 为什么用Docker
 1. 传统的虚拟机技术启动应用服务往往需要数分钟，而 Docker 容器应用，由于直接运行于宿主内核，无需启动完整的操作系统，因此可以做到秒级、甚至毫秒级的启动时间。大大的节约了开发、测试、部署的时间。
 2. 开发过程中一个常见的问题是环境一致性问题。由于开发环境、测试环境、生产环境不一致，导致有些 bug 并未在开发过程中被发现。而 Docker 的镜像提供了除内核外完整的运行时环境，确保了应用运行环境一致性，从而不会再出现 「这段代码在我机器上没问题啊」 这类问题。
+
 ![1](https://github.com/jiangxk/study/blob/master/images/16c71a127f858a94.jpg)  
 ![2](https://github.com/jiangxk/study/blob/master/images/16c71c3c7c64067f.jpg)  
-![3](https://github.com/jiangxk/study/blob/master/images/16c995c9dc77ca55.jpg)
+![3](https://github.com/jiangxk/study/blob/master/images/16c995c9dc77ca55.jpg)  
 
 
 # Docker 包括三个基本概念
