@@ -35,3 +35,17 @@ https://juejin.im/post/5d4522c1f265da03e05af5f5
 目前，最大的公开仓库是Docker Hub，存放了数量庞大的镜像供用户下载。国内的公开仓库包括Docker Pool等，可以提供稳定的国内访问。如果用户不希望公开分享自己的镜像文件，Docker也支持用户在本地网络内创建一个只能自己访问的私有仓库。    
 当用户创建了自己的镜像之后就可以使用push将它上传到指定的公有或则私有仓库。这样用户下次在另一台机器上使用该镜像时，只需将其从仓库pull下来就可以了。
 
+# Docker springboot mysql
+1. springboot项目打包 
+2. 创建一个文件存放springboot jar包 和Dockerfile（docker需要的） 文件  
+内容是：
+```
+FROM openjdk:8-jdk-alpine
+VOLUME /tmp
+ADD spring-boot-docker.jar app.jar
+ENV JAVA_OPTS=""
+ENTRYPOINT exec java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /app.jar
+
+```
+3. 在路径下构建镜像 docker build -t xxx .
+4. springboot里面连接mysql地址要是mysql容器的地址
