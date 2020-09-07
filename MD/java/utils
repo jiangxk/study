@@ -1,0 +1,387 @@
+package com.leyantech.edu.app.edu_course.base.utils;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.FatalBeanException;
+
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @author xiankun.jiang, {xiankun.jiang@leyantech.com}
+ * @date 2020-09-07.
+ */
+public class BeanUtil extends BeanUtils {
+
+  private static Log log = LogFactory.getLog(BeanUtil.class);
+
+  public static <T> String toString(T obj) {
+    StringBuffer sb = new StringBuffer();
+    Class<?> actualEditable = obj.getClass();
+    PropertyDescriptor[] targetPds = getPropertyDescriptors(actualEditable);
+    for (PropertyDescriptor targetPd : targetPds) {
+      Method readMethod = targetPd.getReadMethod();
+      if (readMethod != null) {
+        if (!Modifier.isPublic(readMethod.getDeclaringClass().getModifiers())) {
+          readMethod.setAccessible(true);
+        }
+        try {
+          String s = readMethod.invoke(obj).toString();
+          sb.append(readMethod.getName());
+          sb.append('=');
+          sb.append(s);
+          sb.append(';');
+        } catch (IllegalAccessException e) {
+          e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+          e.printStackTrace();
+        } catch (InvocationTargetException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+    return sb.toString();
+  }
+
+  public static <T> List<T> copyListProperties(List<?> sourceList, Class<T> clazz,
+      String[] ignoreProperties) {
+    List<T> list = new ArrayList<T>();
+    try {
+      for (Object obj : sourceList) {
+        T t = clazz.newInstance();
+        if (ignoreProperties != null) {
+          copyProperties(obj, t, ignoreProperties);
+        } else {
+          copyProperties(obj, t);
+        }
+        list.add(t);
+      }
+    } catch (InstantiationException e) {
+      log.error("copy object error.", e);
+    } catch (IllegalAccessException e) {
+      log.error("copy object error.", e);
+    }
+    return list;
+  }
+
+  public static <T> List<T> copyListProperties(List<?> sourceList, Class<T> clazz) {
+    return copyListProperties(sourceList, clazz, null);
+  }
+
+  public static <T> T copyPropertiesAndNew(Object source, Class<T> clazz) {
+    return copyPropertiesAndNew(source, clazz, null);
+  }
+
+  public static <T> T copyPropertiesAndNew(Object source, Class<T> clazz,
+      String[] ignoreProperties) {
+    T t = null;
+    try {
+      t = clazz.newInstance();
+      if (ignoreProperties != null) {
+        copyProperties(source, t, ignoreProperties);
+      } else {
+        copyProperties(source, t);
+      }
+    } catch (InstantiationException e) {
+      log.error("copy object error.", e);
+    } catch (IllegalAccessException e) {
+      log.error("copy object error.", e);
+    }
+    return t;
+  }
+
+  public static <T> T compareProperties(Class<T> clazz, Class<?> defaultClass,
+      Map<String, Object[]> diffMap, Map<String, PropertyRule> propertyRules, Object... sources) {
+    T t = null;
+    Class<?> actualEditable = clazz;
+    PropertyDescriptor[] targetPds = getPropertyDescriptors(actualEditable);
+    if (propertyRules == null) {
+      propertyRules = new HashMap<String, PropertyRule>();
+    }
+    List<String> ignoreList = new ArrayList<String>();
+    for (String key : propertyRules.keySet()) {
+      if (propertyRules.get(key).ignore) {
+        ignoreList.add(key);
+      }
+    }
+    try {
+      t = clazz.newInstance();
+    } catch (InstantiationException | IllegalAccessException e) {
+      log.error("compare object error.", e);
+    }
+    int defaultIndex = 0;
+    if (defaultClass != null) {
+      for (int i = 0; i < sources.length; i++) {
+        Object source = sources[i];
+        if (source != null && defaultClass.equals(source.getClass())) {
+          defaultIndex = i;
+          break;
+        }
+      }
+    }
+    for (PropertyDescriptor targetPd : targetPds) {
+      Method writeMethod = targetPd.getWriteMethod();
+      if (writeMethod != null && (ignoreList == null || (!ignoreList
+          .contains(targetPd.getName())))) {
+        Object value = null;
+        Object[] valueSources = new Object[sources.length];
+        try {
+          for (int i = 0; i < sources.length; i++) {
+            Object source = sources[i];
+            PropertyDescriptor sourcePd = getPropertyDescriptor(source.getClass(),
+                targetPd.getName());
+            Object valueSource = null;
+            if (sourcePd != null) {
+              Method sourceReadMethod = sourcePd.getReadMethod();
+              if (sourceReadMethod != null) {
+                if (!Modifier.isPublic(sourceReadMethod.getDeclaringClass().getModifiers())) {
+                  sourceReadMethod.setAccessible(true);
+                }
+                valueSource = sourceReadMethod.invoke(source);
+              }
+            }
+            valueSources[i] = valueSource;
+          }
+          PropertyRule rule = propertyRules.get(targetPd.getName());
+          CompareResult result = compareValue(defaultIndex, rule, valueSources);
+          value = result.getValue();
+          if (!result.isEquals() && diffMap != null) {
+            boolean isMust = false;
+
+            if (propertyRules != null) {
+              if (rule != null && rule.isMust()) {
+                isMust = true;
+                break;
+              }
+            }
+            if (!result.isDiffIsNull() || isMust) {
+              diffMap.put(targetPd.getName(), valueSources);
+            }
+          }
+                    /*if (!objectEquals(valueSource1, valueSource2)) {
+                        Object[] objs = {valueSource1, valueSource2};
+                        if (valueSource1 == null && valueSource2 != null) {
+                            value = valueSource2;
+                        } else if (valueSource1 != null && valueSource2 == null) {
+                            value = valueSource1;
+                        } else if (valueSource1 != null && valueSource2 == null) {
+                             
+                        }
+                        if (diffMap != null) {
+                            diffMap.put(sourcePd1.getName(), objs);
+                        }
+                    } else {
+                        value = valueSource1;
+                    }*/
+          if (!Modifier.isPublic(writeMethod.getDeclaringClass().getModifiers())) {
+            writeMethod.setAccessible(true);
+          }
+          writeMethod.invoke(t, value);
+        } catch (Throwable ex) {
+          ex.printStackTrace();
+          throw new FatalBeanException(
+              "Could not copy property '" + targetPd.getName() + "' from source to target", ex);
+        }
+      }
+    }
+
+    return t;
+  }
+
+  private static CompareResult compareValue(int defaultIndex, PropertyRule rule, Object... objs) {
+    CompareResult result = new CompareResult();
+    Object v = null;
+    Object[] values = new Object[objs.length];
+    int[] valueCounts = new int[objs.length];
+    int nullCount = 0;
+    for (Object obj : objs) {
+      if (obj == null) {
+        nullCount++;
+      }
+      for (int i = 0; i < values.length; i++) {
+        if (values[i] != null) {
+          if (objectEquals(values[i], obj, rule) && obj != null) {
+            valueCounts[i]++;
+            break;
+          } else {
+            result.setEquals(false);
+          }
+        } else if (obj != null) {
+          values[i] = obj;
+          valueCounts[i]++;
+          break;
+        }
+      }
+            /*
+            if (tempValue == null) {
+                tempValue = obj;
+                values[index] = obj;
+                valueCounts[index]++;
+                index++;
+            } else {
+                if (!objectEquals(tempValue, obj)) {
+                    values[index] = obj;
+                    valueCounts[index]++;
+                    index++;
+                }
+                tempValue = obj;
+            }*/
+    }
+        /*if ((valueCounts[0] == 1 && valueCounts[1] == 0) || (valueCounts[0] == 0 && valueCounts[1] == 1)) {
+            System.out.println();
+        }*/
+    int maxIndex = findMaxIndex(valueCounts);
+    if (maxIndex > -1) {
+      v = values[maxIndex];
+    } else {
+      v = objs[defaultIndex];
+    }
+    result.setValue(v);
+    if (!result.isEquals() && objs.length - nullCount == 1) {
+      result.setDiffIsNull(true);
+    }
+    return result;
+  }
+
+  private static int findMaxIndex(int[] valueCounts) {
+    int maxIndex = -1;
+    int max = 0;
+    for (int i = 0; i < valueCounts.length; i++) {
+      if (i == 0) {
+        maxIndex = i;
+        max = valueCounts[i];
+        continue;
+      }
+      if (valueCounts[i] > max) {
+        maxIndex = i;
+        max = valueCounts[i];
+      } else if (valueCounts[i] == max) {
+        maxIndex = -1;
+      }
+    }
+    return maxIndex;
+  }
+
+  private static boolean objectEquals(Object obj1, Object obj2, PropertyRule rule) {
+    if (obj1 == null && obj2 == null) {
+      return true;
+    } else if (obj1 == null && obj2 != null) {
+      return false;
+    } else if (obj1 != null && obj2 == null) {
+      return false;
+    } else {
+      if (rule != null && obj1 instanceof BigDecimal && obj2 instanceof BigDecimal) {
+        if (rule.decimalPlace > 0) {
+          BigDecimal bd1 = ((BigDecimal) obj1)
+              .setScale(rule.decimalPlace, BigDecimal.ROUND_HALF_UP);
+          BigDecimal bd2 = ((BigDecimal) obj2)
+              .setScale(rule.decimalPlace, BigDecimal.ROUND_HALF_UP);
+          return bd1.equals(bd2);
+        }
+        if (rule.precision > 0 && ((BigDecimal) obj1).compareTo(BigDecimal.ZERO) != 0) {
+          BigDecimal bd = ((BigDecimal) obj1).subtract(((BigDecimal) obj2)).abs()
+              .divide(((BigDecimal) obj1), rule.precision, BigDecimal.ROUND_HALF_UP);
+          return bd.compareTo(BigDecimal.ZERO) == 0;
+        }
+      }
+      return obj1.equals(obj2);
+    }
+  }
+
+
+  static class CompareResult {
+
+    private Object value;
+    private boolean equals = true;
+    private boolean diffIsNull = false;
+
+    public Object getValue() {
+      return value;
+    }
+
+    public void setValue(Object value) {
+      this.value = value;
+    }
+
+    public boolean isEquals() {
+      return equals;
+    }
+
+    public void setEquals(boolean equals) {
+      this.equals = equals;
+    }
+
+    public boolean isDiffIsNull() {
+      return diffIsNull;
+    }
+
+    public void setDiffIsNull(boolean diffIsNull) {
+      this.diffIsNull = diffIsNull;
+    }
+
+  }
+
+  public static class PropertyRule {
+
+    /**
+     * 数值精度
+     */
+    private int precision = -1;
+    /**
+     * 小数位
+     */
+    private int decimalPlace = 0;
+    /**
+     * 忽略
+     */
+    private boolean ignore = false;
+    /**
+     *
+     */
+    private boolean must = false;
+
+    public int getPrecision() {
+      return precision;
+    }
+
+    public PropertyRule setPrecision(int precision) {
+      this.precision = precision;
+      return this;
+    }
+
+    public int getDecimalPlace() {
+      return decimalPlace;
+    }
+
+    public PropertyRule setDecimalPlace(int decimalPlace) {
+      this.decimalPlace = decimalPlace;
+      return this;
+    }
+
+    public boolean isIgnore() {
+      return ignore;
+    }
+
+    public PropertyRule setIgnore(boolean ignore) {
+      this.ignore = ignore;
+      return this;
+    }
+
+    public boolean isMust() {
+      return must;
+    }
+
+    public PropertyRule setMust(boolean must) {
+      this.must = must;
+      return this;
+    }
+  }
+}
