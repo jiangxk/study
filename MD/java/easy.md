@@ -5,8 +5,11 @@ https://github.com/yuanguangxin/LeetCode/blob/master/Rocket.md
 https://github.com/yuanguangxin/LeetCode
 
 https://zhuanlan.zhihu.com/p/106997736
+
+https://blog.csdn.net/jingyangV587/article/details/102531764
 # 计算机组成原理
 https://blog.csdn.net/chen1083376511/article/details/81941318
+
 # 网络编程
 > TCP/IP 体系架构(网络通信协议)
 1. 应用层  各种应用层协议 FTP HTTP  SMTP
@@ -463,10 +466,6 @@ innodb在快照读的情况下并没有真正的避免幻读, 但是在当前读
 Innodb的实现真算不上MVCC, 因为并没有实现核心的多版本共存, undo log 中的内容只是串行化的结果, 记录了多个事务的过程, 不属于多版本共存。但理想的MVCC是难以实现的, 当事务仅修改一行记录使用理想的MVCC模式是没有问题的, 可以通过比较版本号进行回滚, 但当事务影响到多行数据时, 理想的MVCC就无能为力了。
 比如, 如果事务A执行理想的MVCC, 修改Row1成功, 而修改Row2失败, 此时需要回滚Row1, 但因为Row1没有被锁定, 其数据可能又被事务B所修改, 如果此时回滚Row1的内容，则会破坏事务B的修改结果，导致事务B违反ACID。 这也正是所谓的 第一类更新丢失 的情况。
 也正是因为InnoDB使用的MVCC中结合了排他锁, 不是纯的MVCC, 所以第一类更新丢失是不会出现了, 一般说更新丢失都是指第二类丢失更新。
-
-# 面试题
-https://blog.csdn.net/jingyangV587/article/details/102531764
-
 
 # 高并发系统限流
 
